@@ -24,7 +24,7 @@ jobs:
         run: python cj_script.py
 
       - name: Upload fetched products file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # ✅ Updated to v4 (fixes error)
         with:
           name: fetched-products
           path: fetched_products.txt
