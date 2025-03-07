@@ -21,10 +21,12 @@ jobs:
         run: pip install requests
 
       - name: Run Script
+        env:
+          CJ_API_TOKEN: ${{ secrets.CJ_API_TOKEN }}  # ✅ Now the script can access the API token
         run: python cj_script.py
 
       - name: Upload fetched products file
-        uses: actions/upload-artifact@v4  # ✅ Updated to v4 (fixes error)
+        uses: actions/upload-artifact@v4
         with:
           name: fetched-products
           path: fetched_products.txt
