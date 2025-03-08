@@ -1,11 +1,14 @@
 import requests
 import time
-import json
 import os
 
 # AOP+ API URL and Token
 API_URL = "https://api.aopplus.com/v1/products"
 API_KEY = "API@CJ4086585@CJ:eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIyMzgxMSIsInR5cGUiOiJBQ0NFU1NfVE9LRU4iLCJzdWIiOiJicUxvYnFRMGxtTm55UXB4UFdMWnlqYTMzeXF5L2RiTXkxZFdqcW9DWm9kRXlQVVQvR2ZxN2l0VHJjbUhhL1g4cE42QmRybUI3VWNuaXRaZkZrNHNuOWxnZVNFbEY1VXJzTnpjK1A4enlMc0FkZzJJaklBTmpNS0lQbWR1dTkvNWRNbUI2NjhIUFl1S3RaSndSMUNlMkJCNVdRMXpWMEI4YmJ6UUlHUnNJRExjeTl4YWY1ZjU0OHc5K1VRTm1yL0Qwa1NkMkE4VThkUEhuWE10eDNlWVZRK1NIa3dReG52R1NSeUU2dmFhR09sNE40MllKQlBKR2tDRGQyK0VJRXBhN3orRGVVdFJiZXFQcFlKQnR0TWJDR0VFWDdET3lITy9mZm1QZldjWGJjcitqTG5DMjdqd3ZyQUVHenNGYnlkZSIsImlhdCI6MTc0MTI2MzQwNH0.doVaSAWwCe4Wm3dR5NCM5WXBKFDtqMR2y3E4TcilYao"
+
+# Set a maximum runtime limit (in seconds). For example, 5 hours (5 * 60 * 60 = 18000 seconds)
+TIME_LIMIT = 5 * 60 * 60  # 5 hours
+start_time = time.time()
 
 # Function to fetch products from AOP+ API
 def fetch_products(page=1):
@@ -31,6 +34,11 @@ def fetch_product_ids():
     all_product_ids = []
 
     while True:
+        # Check if the script has exceeded the time limit
+        if time.time() - start_time > TIME_LIMIT:
+            print("Time limit exceeded. Stopping the script.")
+            break
+        
         print(f"Fetching products from page {page}...")
         products = fetch_products(page)
         
