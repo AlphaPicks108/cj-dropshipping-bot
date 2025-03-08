@@ -1,0 +1,35 @@
+name: Fetch Product IDs from Printrove
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Runs every hour (adjust as needed)
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  fetch_product_ids:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          pip install requests
+
+      - name: Run productidfetch.py
+        env:
+          PRINTROVE_API_KEY: ${{ secrets.PRINTROVE_API_KEY }}  # Use the secret for API key
+        run: |
+          python productidfetch.py
+
+      - name: Upload Product IDs artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: product-ids
+          path: product_ids.txt  # Upload the product IDs file
