@@ -28,13 +28,15 @@ jobs:
             touch fetched_products.txt
           fi
 
-      - name: Run Script (Append New Data)
+      - name: Run Script (Append New Data with Retry)
         env:
           CJ_API_TOKEN: ${{ secrets.CJ_API_TOKEN }}
         run: python cj_script.py
+        timeout-minutes: 120  # ⏳ Prevent script from running forever
+        continue-on-error: true  # ✅ Prevents failure if API rate limit is hit
 
       - name: Upload Updated fetched_products.txt
         uses: actions/upload-artifact@v4
         with:
-          name: all-fetched-products  # ✅ This artifact will always hold all products
+          name: all-fetched-products  # ✅ Keeps all data in one artifact
           path: fetched_products.txt
