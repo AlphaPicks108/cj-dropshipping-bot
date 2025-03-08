@@ -3,11 +3,13 @@ name: Run CJ Dropshipping Script
 on:
   workflow_dispatch:  # Allows manual execution
   schedule:
-    - cron: '0 * * * *'  # Runs every hour (Modify if needed)
+    - cron: '30 */5 * * *'  # ⏳ Runs every 5.5 hours
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
+    timeout-minutes: 360  # ⏳ Prevents auto-cancel (6 hours max runtime)
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -20,13 +22,19 @@ jobs:
       - name: Install Dependencies
         run: pip install requests
 
-      - name: Run Script
+      - name: Create Empty fetched_products.txt If It Doesn't Exist
+        run: |
+          if [ ! -f fetched_products.txt ]; then
+            touch fetched_products.txt
+          fi
+
+      - name: Run Script (Append New Data)
         env:
-          CJ_API_TOKEN: ${{ secrets.CJ_API_TOKEN }}  # ✅ Now the script can access the API token
+          CJ_API_TOKEN: ${{ secrets.CJ_API_TOKEN }}
         run: python cj_script.py
 
-      - name: Upload fetched products file
+      - name: Upload Updated fetched_products.txt
         uses: actions/upload-artifact@v4
         with:
-          name: fetched-products
+          name: all-fetched-products  # ✅ This artifact will always hold all products
           path: fetched_products.txt
