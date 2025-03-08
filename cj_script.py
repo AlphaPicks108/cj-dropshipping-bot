@@ -38,7 +38,7 @@ def save_fetched_products(product_ids):
         for product_id in product_ids:
             file.write(product_id + "\n")
 
-# Countdown timer function (Now 10 seconds)
+# Countdown timer function
 def countdown_timer(seconds, message):
     for remaining in range(seconds, 0, -1):
         sys.stdout.write(f"\r⏳ {message} ({remaining}s remaining) ")
@@ -46,79 +46,72 @@ def countdown_timer(seconds, message):
         time.sleep(1)
     print("\n🚀 Proceeding...")
 
-# Function to fetch new products only with custom backoff handling
+# Function to fetch only 1 page per execution (max 50 products)
 def fetch_new_products():
     all_products = []
     fetched_products = load_fetched_products()
-    page = 1
-    page_size = 100  # ✅ Fetches 100 products per page
-    backoff_intervals = [900, 1800, 2700]  # ✅ Retry after 15, 30, 45 minutes
+    page = 1  # ✅ Always fetch only page 1
+    page_size = 50  # ✅ Max 50 products per page (or all products if less than 50)
     retry_attempts = 0
 
-    while True:
-        print(f"\n🔄 Fetching Page {page}...", flush=True)
+    print(f"\n🔄 Fetching Page {page}...", flush=True)
 
-        params = {'page': page, 'pageSize': page_size}  
+    params = {'page': page, 'pageSize': page_size}
 
-        try:
-            response = session.get(url, headers=session.headers, params=params, timeout=60)  
-            response.raise_for_status()  
-        except requests.exceptions.Timeout:
-            print("\n⏳ API timeout! Retrying in 5 minutes...", flush=True)
-            countdown_timer(300, "Waiting 5 minutes due to timeout")  
-            continue
-        except requests.exceptions.RequestException as e:
-            if response.status_code == 429:  # ✅ Handle rate limit errors
-                if retry_attempts < len(backoff_intervals):
-                    wait_time = backoff_intervals[retry_attempts]
-                    retry_attempts += 1
-                    print(f"\n❌ ERROR 429: Too Many Requests. Waiting {wait_time//60} minutes before retrying...", flush=True)
-                    countdown_timer(wait_time, f"Waiting {wait_time//60} minutes due to API rate limit")  
-                    continue
-                else:
-                    print("\n❌ ERROR 429: Too Many Requests. Max retries reached, stopping script.", flush=True)
-                    break
-            print(f"\n❌ ERROR: {e}. Retrying in 5 minutes...", flush=True)
-            countdown_timer(300, "Waiting 5 minutes before retrying")  
-            continue
+    try:
+        response = session.get(url, headers=session.headers, params=params, timeout=60)
+        response.raise_for_status()
+    except requests.exceptions.Timeout:
+        print("\n⏳ API timeout! Retrying in 5 minutes...", flush=True)
+        countdown_timer(300, "Waiting 5 minutes due to timeout")
+        return
+    except requests.exceptions.RequestException as e:
+        if response.status_code == 429:  # ✅ Handle rate limit errors
+            print("\n❌ ERROR 429: Too Many Requests. Waiting 40 minutes before retrying...", flush=True)
+            countdown_timer(2400, "Waiting 40 minutes due to API rate limit")  # ✅ Wait 40 minutes
+            return
+        print(f"\n❌ ERROR: {e}. Retrying in 5 minutes...", flush=True)
+        countdown_timer(300, "Waiting 5 minutes before retrying")
+        return
 
-        if response.status_code == 200:
-            data = response.json()
-            products = data.get('data', {}).get('list', [])
+    if response.status_code == 200:
+        data = response.json()
+        products = data.get('data', {}).get('list', [])
 
-            if not products:
-                print("\n✅ No more products found. Stopping...", flush=True)
-                break  
+        if not products:
+            print("\n✅ No more products found. Stopping...", flush=True)
+            return
 
-            new_products = []
-            new_product_ids = []
+        # If fewer than 50 products are available, fetch them all
+        products = products[:min(len(products), page_size)]
 
-            # Filter new products
-            for product in products:
-                product_id = product.get('productSku', 'N/A')
-                if product_id not in fetched_products:
-                    new_products.append(product)
-                    new_product_ids.append(product_id)
+        new_products = []
+        new_product_ids = []
 
-            if new_products:
-                all_products.extend(new_products)
-                save_fetched_products(new_product_ids)
-                print(f"✅ Fetched {len(new_products)} new products from Page {page}", flush=True)
+        # Filter new products
+        for product in products:
+            product_id = product.get('productSku', 'N/A')
+            if product_id not in fetched_products:
+                new_products.append(product)
+                new_product_ids.append(product_id)
 
-            page += 1  
-            countdown_timer(10, "Waiting before next page request")  # ✅ Now 10s wait time
+        if new_products:
+            all_products.extend(new_products)
+            save_fetched_products(new_product_ids)
+            print(f"✅ Fetched {len(new_products)} new products from Page {page}", flush=True)
 
-        elif response.status_code == 401:
-            print("\n❌ ERROR: Invalid API token or session expired.", flush=True)
-            print("🔄 Retrying in 1 hour...", flush=True)
-            countdown_timer(3600, "Retrying after 1 hour")  
-            continue  
+        countdown_timer(600, "Waiting 10 minutes before next execution")  # ✅ Wait 10 minutes
 
-        else:
-            print(f"\n❌ ERROR: Status Code {response.status_code}, Details: {response.text}", flush=True)
-            break  
+    elif response.status_code == 401:
+        print("\n❌ ERROR: Invalid API token or session expired.", flush=True)
+        print("🔄 Retrying in 1 hour...", flush=True)
+        countdown_timer(3600, "Retrying after 1 hour")
+        return
+    else:
+        print(f"\n❌ ERROR: Status Code {response.status_code}, Details: {response.text}", flush=True)
+        return
 
-    return all_products  
+    return all_products
 
 # Run the function
 products = fetch_new_products()
