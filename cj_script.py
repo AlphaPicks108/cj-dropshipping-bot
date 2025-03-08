@@ -46,14 +46,14 @@ def countdown_timer(seconds, message):
         time.sleep(1)
     print("\n🚀 Proceeding...")
 
-# Function to fetch new products only with backoff handling
+# Function to fetch new products only with custom backoff handling
 def fetch_new_products():
     all_products = []
     fetched_products = load_fetched_products()
     page = 1
     page_size = 100  # ✅ Fetches 100 products per page
-    max_retries = 5  # ✅ Maximum retry attempts for 429 errors
-    retry_delay = 60  # ✅ Start with 60 seconds backoff
+    backoff_intervals = [900, 1800, 2700]  # ✅ Retry after 15, 30, 45 minutes
+    retry_attempts = 0
 
     while True:
         print(f"\n🔄 Fetching Page {page}...", flush=True)
@@ -69,10 +69,15 @@ def fetch_new_products():
             continue
         except requests.exceptions.RequestException as e:
             if response.status_code == 429:  # ✅ Handle rate limit errors
-                print("\n❌ ERROR 429: Too Many Requests. Waiting before retrying...", flush=True)
-                countdown_timer(retry_delay, f"Waiting {retry_delay} seconds due to API rate limit")  
-                retry_delay *= 2  # ✅ Double wait time for next failure
-                continue
+                if retry_attempts < len(backoff_intervals):
+                    wait_time = backoff_intervals[retry_attempts]
+                    retry_attempts += 1
+                    print(f"\n❌ ERROR 429: Too Many Requests. Waiting {wait_time//60} minutes before retrying...", flush=True)
+                    countdown_timer(wait_time, f"Waiting {wait_time//60} minutes due to API rate limit")  
+                    continue
+                else:
+                    print("\n❌ ERROR 429: Too Many Requests. Max retries reached, stopping script.", flush=True)
+                    break
             print(f"\n❌ ERROR: {e}. Retrying in 5 minutes...", flush=True)
             countdown_timer(300, "Waiting 5 minutes before retrying")  
             continue
