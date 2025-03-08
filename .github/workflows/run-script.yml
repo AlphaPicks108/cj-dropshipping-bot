@@ -3,12 +3,12 @@ name: Run CJ Dropshipping Script
 on:
   workflow_dispatch:  # Allows manual execution
   schedule:
-    - cron: '30 */5 * * *'  # ⏳ Runs every 5.5 hours
+    - cron: '0 * * * *'  # ⏳ Runs every 1 hour
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
-    timeout-minutes: 360  # ⏳ Prevents auto-cancel (6 hours max runtime)
+    timeout-minutes: 120  # ⏳ Prevents auto-cancel (2 hours max runtime)
 
     steps:
       - name: Checkout Repository
@@ -28,12 +28,12 @@ jobs:
             touch fetched_products.txt
           fi
 
-      - name: Run Script (Append New Data with Retry)
+      - name: Run Script (Fetch 1 Page, Handle Rate Limits)
         env:
           CJ_API_TOKEN: ${{ secrets.CJ_API_TOKEN }}
         run: python cj_script.py
-        timeout-minutes: 120  # ⏳ Prevents script from running forever
-        continue-on-error: true  # ✅ Prevents failure if API rate limit is hit
+        timeout-minutes: 60  # ⏳ Prevents script from running too long
+        continue-on-error: true  # ✅ Prevents workflow failure if API rate limit is hit
 
       - name: Upload Updated fetched_products.txt
         uses: actions/upload-artifact@v4
