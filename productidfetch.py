@@ -5,12 +5,13 @@ import os
 # Fetch API key from GitHub secrets
 api_key = os.getenv('PRINTFUL_API_KEY')
 
-# Base URL for Printful API
-BASE_URL = "https://api.printful.com/products"
+# Correct Printful API URL
+BASE_URL = "https://api.printful.com/store/products"
 
-# Headers for authentication
+# Headers with API Key
 HEADERS = {
-    "Authorization": f"Bearer {api_key}"
+    "Authorization": f"Bearer {api_key}",
+    "Content-Type": "application/json"
 }
 
 # Function to fetch product IDs
@@ -23,7 +24,7 @@ def fetch_product_ids(offset=0, limit=50):
 
     try:
         response = requests.get(BASE_URL, headers=HEADERS, params=params)
-        response.raise_for_status()
+        response.raise_for_status()  # Raise error for bad responses (401, 403, 404, etc.)
 
         data = response.json()
         products = data.get('result', [])
