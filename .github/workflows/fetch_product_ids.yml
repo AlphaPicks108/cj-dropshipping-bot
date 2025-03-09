@@ -23,11 +23,11 @@ jobs:
       - name: Run Product ID Fetch Script
         run: python productidfetch.py
         env:
-          PRINTFUL_API_KEY: ${{ secrets.PRINTFUL_API_KEY }}
+          PRINTFUL_API_TOKEN: ${{ secrets.PRINTFUL_API_TOKEN }}  # ✅ Pass the Access Key from GitHub Secrets
 
       - name: Upload Product ID Artifact
         uses: actions/upload-artifact@v4
         with:
           name: product-ids
           path: product_ids.txt
-          retention-days: 30  # Keeps artifact for 30 days
+          retention-days: 30
