@@ -5,7 +5,7 @@ import sys
 
 # ✅ Printrove API URLs
 AUTH_URL = "https://api.printrove.com/api/external/token"
-PRODUCTS_URL = "https://api.printrove.com/api/external/products"
+PRODUCT_CATALOG_URL = "https://api.printrove.com/api/external/product-catalog"  # ✅ Corrected endpoint
 
 # ✅ Get login credentials from GitHub Secrets
 EMAIL = os.getenv('PRINTROVE_EMAIL')
@@ -32,24 +32,26 @@ def get_auth_token():
         print(f"❌ ERROR: Failed to get authentication token - {e}")
         sys.exit(1)
 
-# ✅ Function to fetch product IDs
-def fetch_product_ids(token, page=1, per_page=20):
+# ✅ Function to fetch available products from Printrove
+def fetch_product_catalog(token):
     product_ids = []
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-    params = {
-        "page": str(page),
-        "per_page": str(per_page)
-    }
 
     try:
-        response = requests.get(PRODUCTS_URL, headers=headers, params=params)
+        response = requests.get(PRODUCT_CATALOG_URL, headers=headers)
         response.raise_for_status()
+        
         data = response.json()
+        print(f"📢 API Response:", data)  # ✅ Print full response for debugging
 
-        products = data.get("result", [])
+        products = data.get("result", [])  # ✅ Adjust based on actual API response
+        if not products:
+            print("❌ ERROR: Printrove API returned an empty product catalog.")
+            sys.exit(1)
+
         for product in products:
             product_ids.append(product.get("id"))
 
@@ -58,11 +60,11 @@ def fetch_product_ids(token, page=1, per_page=20):
     except requests.exceptions.HTTPError as e:
         error_message = response.json().get('error', {}).get('message', 'Unknown error')
         print(f"❌ ERROR: {response.status_code} - {error_message}")
-        return []
+        sys.exit(1)
 
 # ✅ Function to save product IDs
 def save_product_ids(product_ids):
-    with open('product_ids.txt', 'a') as f:
+    with open('product_ids.txt', 'w') as f:  # ✅ Overwrite to avoid duplicates
         for product_id in product_ids:
             f.write(f"{product_id}\n")
 
@@ -71,22 +73,11 @@ def main():
     print("🔄 Getting authentication token...")
     token = get_auth_token()
     
-    page = 1
-    per_page = 20  # ✅ Printrove only allows max 20 per page
+    print(f"🔄 Fetching all available products from Printrove...")
+    product_ids = fetch_product_catalog(token)
 
-    while True:
-        print(f"🔄 Fetching products (Page {page})...")
-        product_ids = fetch_product_ids(token, page, per_page)
-
-        if not product_ids:
-            print("✅ No more products found. Exiting...")
-            break
-
-        save_product_ids(product_ids)
-        print(f"✅ Saved {len(product_ids)} product IDs.")
-
-        page += 1  # ✅ Move to next page
-        time.sleep(15)  # ✅ Avoid rate limiting
+    save_product_ids(product_ids)
+    print(f"✅ Saved {len(product_ids)} product IDs.")
 
 if __name__ == "__main__":
     main()
