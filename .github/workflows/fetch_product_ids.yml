@@ -28,7 +28,7 @@ jobs:
           PRINTROVE_PASSWORD: ${{ secrets.PRINTROVE_PASSWORD }}
 
       - name: Upload Product ID Artifact
-        if: success()
+        if: success()  # ✅ Uploads only if the script runs successfully
         uses: actions/upload-artifact@v4
         with:
           name: product-ids
