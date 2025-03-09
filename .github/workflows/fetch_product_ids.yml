@@ -1,4 +1,4 @@
-name: Fetch Product IDs from Printful
+name: Fetch Product IDs from Printrove
 
 on:
   schedule:
@@ -24,10 +24,11 @@ jobs:
         run: |
           python productidfetch.py
         env:
-          PRINTFUL_API_TOKEN: ${{ secrets.PRINTFUL_API_TOKEN }}
+          PRINTROVE_EMAIL: ${{ secrets.PRINTROVE_EMAIL }}
+          PRINTROVE_PASSWORD: ${{ secrets.PRINTROVE_PASSWORD }}
 
       - name: Upload Product ID Artifact
-        if: success()  # ✅ Only upload if script succeeds
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: product-ids
