@@ -21,11 +21,13 @@ jobs:
         run: pip install requests
 
       - name: Run Product ID Fetch Script
-        run: python productidfetch.py
+        run: |
+          python productidfetch.py
         env:
-          PRINTFUL_API_TOKEN: ${{ secrets.PRINTFUL_API_TOKEN }}  # ✅ Uses Bearer token
+          PRINTFUL_API_TOKEN: ${{ secrets.PRINTFUL_API_TOKEN }}
 
       - name: Upload Product ID Artifact
+        if: success()  # ✅ Only upload if script succeeds
         uses: actions/upload-artifact@v4
         with:
           name: product-ids
