@@ -23,7 +23,7 @@ jobs:
       - name: Run Product ID Fetch Script
         run: python productidfetch.py
         env:
-          PRINTFUL_API_TOKEN: ${{ secrets.PRINTFUL_API_TOKEN }}  # ✅ Pass the Access Key from GitHub Secrets
+          PRINTFUL_API_TOKEN: ${{ secrets.PRINTFUL_API_TOKEN }}  # ✅ Uses Bearer token
 
       - name: Upload Product ID Artifact
         uses: actions/upload-artifact@v4
