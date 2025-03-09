@@ -1,35 +1,33 @@
-name: Fetch Product IDs from Printrove
+name: Fetch Product IDs and Save to Artifact
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Runs every hour (adjust as needed)
+    - cron: '0 * * * *'  # Runs every hour
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
-  fetch_product_ids:
+  fetch-product-ids:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - name: Set Up Python
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: '3.10'
 
-      - name: Install dependencies
-        run: |
-          pip install requests
+      - name: Install Dependencies
+        run: pip install requests
 
-      - name: Run productidfetch.py
+      - name: Run Product ID Fetch Script
+        run: python productidfetch.py
         env:
-          PRINTROVE_API_KEY: ${{ secrets.PRINTROVE_API_KEY }}  # Use the secret for API key
-        run: |
-          python productidfetch.py
+          PRINTROVE_API_KEY: ${{ secrets.PRINTROVE_API_KEY }}
 
-      - name: Upload Product IDs artifact
-        uses: actions/upload-artifact@v2
+      - name: Upload Product ID Artifact
+        uses: actions/upload-artifact@v3  # ✅ Updated from v2 to v3
         with:
           name: product-ids
-          path: product_ids.txt  # Upload the product IDs file
+          path: product_ids.txt
+          retention-days: 30  # Keeps artifacts for 30 days
