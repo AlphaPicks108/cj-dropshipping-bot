@@ -1,4 +1,4 @@
-name: Fetch Product IDs and Save to Artifact
+name: Fetch Product IDs from Printful
 
 on:
   schedule:
@@ -23,11 +23,12 @@ jobs:
       - name: Run Product ID Fetch Script
         run: python productidfetch.py
         env:
-          PRINTROVE_API_KEY: ${{ secrets.PRINTROVE_API_KEY }}
+          PRINTFUL_API_KEY: ${{ secrets.PRINTFUL_API_KEY }}
 
       - name: Upload Product ID Artifact
-        uses: actions/upload-artifact@v4  # ✅ Updated to v4
+        uses: actions/upload-artifact@v4
         with:
           name: product-ids
           path: product_ids.txt
-          retention-days: 30  # Keeps artifacts for 30 days
+          retention-days: 30
+
