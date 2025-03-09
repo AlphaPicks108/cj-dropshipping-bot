@@ -2,15 +2,20 @@ import requests
 import time
 import os
 
-# Get Printful Access Key from GitHub Secrets
+# Get Printful API Token from GitHub Secrets
 api_token = os.getenv('PRINTFUL_API_TOKEN')
+
+# Ensure the token is retrieved
+if not api_token:
+    print("Error: PRINTFUL_API_TOKEN is missing. Set it in GitHub Secrets.")
+    exit(1)
 
 # Printful API URL for Store Products
 BASE_URL = "https://api.printful.com/store/products"
 
-# Headers with Access Key
+# ✅ Correct Headers for Bearer Authentication
 HEADERS = {
-    "Authorization": api_token,  # Directly pass the key (No "Bearer" needed)
+    "Authorization": f"Bearer {api_token}",  # ✅ Use Bearer token format
     "Content-Type": "application/json"
 }
 
@@ -24,7 +29,7 @@ def fetch_product_ids(offset=0, limit=50):
 
     try:
         response = requests.get(BASE_URL, headers=HEADERS, params=params)
-        response.raise_for_status()
+        response.raise_for_status()  # Raise an error for 401, 403, etc.
 
         data = response.json()
         products = data.get('result', [])
@@ -34,7 +39,9 @@ def fetch_product_ids(offset=0, limit=50):
 
         return product_ids
 
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.HTTPError as e:
+        if response.status_code == 401:
+            print("Error: Unauthorized. Check if PRINTFUL_API_TOKEN is correct and in Bearer format.")
         print(f"Error fetching data: {e}")
         return []
 
