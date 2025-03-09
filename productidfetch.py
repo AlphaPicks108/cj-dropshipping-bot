@@ -2,15 +2,15 @@ import requests
 import time
 import os
 
-# Fetch API key from GitHub secrets
-api_key = os.getenv('PRINTFUL_API_KEY')
+# Get Printful Access Key from GitHub Secrets
+api_token = os.getenv('PRINTFUL_API_TOKEN')
 
-# Correct Printful API URL
+# Printful API URL for Store Products
 BASE_URL = "https://api.printful.com/store/products"
 
-# Headers with API Key
+# Headers with Access Key
 HEADERS = {
-    "Authorization": f"Bearer {api_key}",
+    "Authorization": api_token,  # Directly pass the key (No "Bearer" needed)
     "Content-Type": "application/json"
 }
 
@@ -24,7 +24,7 @@ def fetch_product_ids(offset=0, limit=50):
 
     try:
         response = requests.get(BASE_URL, headers=HEADERS, params=params)
-        response.raise_for_status()  # Raise error for bad responses (401, 403, 404, etc.)
+        response.raise_for_status()
 
         data = response.json()
         products = data.get('result', [])
@@ -38,13 +38,13 @@ def fetch_product_ids(offset=0, limit=50):
         print(f"Error fetching data: {e}")
         return []
 
-# Function to save product IDs (append to existing file)
+# Function to save product IDs (append to file)
 def save_product_ids(product_ids):
     with open('product_ids.txt', 'a') as f:
         for product_id in product_ids:
             f.write(f"{product_id}\n")
 
-# Main function to fetch and save product IDs
+# Main function
 def main():
     offset = 0
     limit = 50
