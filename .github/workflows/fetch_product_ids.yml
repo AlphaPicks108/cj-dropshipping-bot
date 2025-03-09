@@ -30,5 +30,4 @@ jobs:
         with:
           name: product-ids
           path: product_ids.txt
-          retention-days: 30
-
+          retention-days: 30  # Keeps artifact for 30 days
