@@ -25,8 +25,20 @@ def get_auth_token():
     try:
         response = requests.post(AUTH_URL, json=payload, headers=headers)
         response.raise_for_status()
+        
+        if not response.text:
+            print("❌ ERROR: Empty response from authentication API.")
+            sys.exit(1)
+
         data = response.json()
-        return data.get("access_token")
+        token = data.get("access_token")
+
+        if not token:
+            print(f"❌ ERROR: Authentication failed. API Response: {data}")
+            sys.exit(1)
+
+        print("✅ Authentication successful!")
+        return token
 
     except requests.exceptions.RequestException as e:
         print(f"❌ ERROR: Failed to get authentication token - {e}")
@@ -43,11 +55,15 @@ def fetch_product_catalog(token):
     try:
         response = requests.get(PRODUCT_CATALOG_URL, headers=headers)
         response.raise_for_status()
-        
+
+        if not response.text:
+            print("❌ ERROR: Empty response from product catalog API.")
+            sys.exit(1)
+
         data = response.json()
         print(f"📢 API Response:", data)  # ✅ Print full response for debugging
 
-        products = data.get("result", [])  # ✅ Adjust based on actual API response
+        products = data.get("result", [])
         if not products:
             print("❌ ERROR: Printrove API returned an empty product catalog.")
             sys.exit(1)
@@ -58,8 +74,11 @@ def fetch_product_catalog(token):
         return product_ids
 
     except requests.exceptions.HTTPError as e:
-        error_message = response.json().get('error', {}).get('message', 'Unknown error')
-        print(f"❌ ERROR: {response.status_code} - {error_message}")
+        print(f"❌ HTTP ERROR {response.status_code}: {response.text}")
+        sys.exit(1)
+
+    except requests.exceptions.JSONDecodeError:
+        print(f"❌ ERROR: Printrove API returned a non-JSON response. Raw output:\n{response.text}")
         sys.exit(1)
 
 # ✅ Function to save product IDs
